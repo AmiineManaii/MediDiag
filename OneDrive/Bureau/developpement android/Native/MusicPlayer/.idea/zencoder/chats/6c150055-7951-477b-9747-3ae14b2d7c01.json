@@ -1,0 +1,72 @@
+{
+    "checksum": "8ece1e064bf1264968cce8ddf3c9fced94e8eab9411e6678a64887df67c001d2",
+    "data": {
+    "id": "6c150055-7951-477b-9747-3ae14b2d7c01",
+    "createdAt": 1772221216260,
+    "updatedAt": 1772221248782,
+    "title": "Playlist Repeats and Auto-Removal Issue",
+    "messages": [
+        {
+            "id": "4b42f097-f3ac-4e3a-ae9a-0972ecd9b0af",
+            "role": "user",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "il travaille parfait mais ilya une petite probleme si je vais jouer les musique a partir d'une playlist sans repeat mode la musique sera supprime auto apres il se termine mais si j'active le repeat mode pour tous la file d'attente sera reinstaller a partir de debut jusqu'a la fin"
+                }
+            ],
+            "context": {
+                "currentFile": {
+                    "fsPath": "C:/Users/amine/OneDrive/Bureau/developpement android/Native/MusicPlayer/app/src/main/java/com/example/musicplayer/ui/components/SongList.kt"
+                }
+            },
+            "createdAt": 1772221216319,
+            "isInternal": false,
+            "rawContent": {
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "il travaille parfait mais ilya une petite probleme si je vais jouer les musique a partir d'une playlist sans repeat mode la musique sera supprime auto apres il se termine mais si j'active le repeat mode pour tous la file d'attente sera reinstaller a partir de debut jusqu'a la fin"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "autoAppliedRules": []
+        },
+        {
+            "id": "3c6a60ee-95f9-4a41-b8f9-80e3fd36e0fb",
+            "role": "system",
+            "content": [
+                {
+                    "type": "errorText",
+                    "text": "An error occurred while processing the request.",
+                    "actions": [
+                        {
+                            "type": "externalAction",
+                            "title": "Regenerate",
+                            "action": "regenerateLastAnswer"
+                        }
+                    ]
+                }
+            ],
+            "createdAt": 1772221248782,
+            "isInternal": false
+        }
+    ],
+    "isAgent": true,
+    "isNameGenerated": true,
+    "isCustomAgent": false,
+    "isUnitTestsAgent": false,
+    "isE2EAgent": false,
+    "isWebDevAgent": false,
+    "isQnaAgent": false,
+    "isRepoInfoAgent": false,
+    "model": "auto",
+    "lastUserMessageAt": 1772221216322
+}
+}

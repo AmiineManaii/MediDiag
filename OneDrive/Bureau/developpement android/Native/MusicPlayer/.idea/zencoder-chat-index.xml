@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ai.zencoder.plugin.chat.index">
+    <option name="activeChatId" value="6c150055-7951-477b-9747-3ae14b2d7c01" />
+    <option name="chatMetadata" value="{&quot;6c150055-7951-477b-9747-3ae14b2d7c01&quot;:{&quot;id&quot;:&quot;6c150055-7951-477b-9747-3ae14b2d7c01&quot;,&quot;title&quot;:&quot;il travaille parfait mais ilya une petite probl...&quot;,&quot;createdAt&quot;:1772221216260,&quot;updatedAt&quot;:1772221226938,&quot;isAgent&quot;:true,&quot;messageCount&quot;:2,&quot;lastUserMessageAt&quot;:1772221216322},&quot;245d5373-6150-4987-a228-45ad69a2a468&quot;:{&quot;id&quot;:&quot;245d5373-6150-4987-a228-45ad69a2a468&quot;,&quot;title&quot;:&quot;Accueil Musical Atrayant – Couleurs et Modularité&quot;,&quot;createdAt&quot;:1771014991529,&quot;updatedAt&quot;:1771026142395,&quot;isAgent&quot;:true,&quot;isNameGenerated&quot;:true,&quot;messageCount&quot;:196,&quot;lastMessagePreview&quot;:&quot;J'ai ajouté la gestion de `onTaskRemoved`. Désormais, si vous \&quot;nettoyez\&quot; les applications alors que ...&quot;,&quot;lastUserMessageAt&quot;:1771026108869}}" />
+  </component>
+</project>
