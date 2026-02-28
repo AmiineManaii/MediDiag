@@ -16,12 +16,13 @@ import androidx.lifecycle.viewModelScope
 import com.example.musicplayer.api.DeezerTrack
 import com.example.musicplayer.model.Song
 import com.example.musicplayer.model.Playlist
-import com.google.gson.Gson
+import com.google.gson.*
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.lang.reflect.Type
 
 class MusicViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -44,25 +45,43 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
 
     private val contentResolver: ContentResolver = application.contentResolver
     private val sharedPreferences = application.getSharedPreferences("music_player_prefs", Context.MODE_PRIVATE)
-    private val gson = Gson()
+    private val gson = GsonBuilder()
+        .registerTypeAdapter(Uri::class.java, object : JsonSerializer<Uri>, JsonDeserializer<Uri> {
+            override fun serialize(src: Uri?, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
+                return JsonPrimitive(src?.toString() ?: "")
+            }
+            override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): Uri {
+                val uriString = json?.asString
+                return if (uriString.isNullOrEmpty()) Uri.EMPTY else Uri.parse(uriString)
+            }
+        })
+        .create()
 
     init {
         loadPlaylists()
     }
 
     private fun loadPlaylists() {
-        val json = sharedPreferences.getString("playlists", null)
-        if (json != null) {
-            val type = object : TypeToken<List<Playlist>>() {}.type
-            val savedPlaylists: List<Playlist> = gson.fromJson(json, type)
-            playlists.clear()
-            playlists.addAll(savedPlaylists)
+        try {
+            val json = sharedPreferences.getString("playlists", null)
+            if (json != null) {
+                val type = object : TypeToken<List<Playlist>>() {}.type
+                val savedPlaylists: List<Playlist> = gson.fromJson(json, type)
+                playlists.clear()
+                playlists.addAll(savedPlaylists)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
     private fun savePlaylists() {
-        val json = gson.toJson(playlists.toList())
-        sharedPreferences.edit().putString("playlists", json).apply()
+        try {
+            val json = gson.toJson(playlists.toList())
+            sharedPreferences.edit().putString("playlists", json).apply()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     fun createPlaylist(name: String) {

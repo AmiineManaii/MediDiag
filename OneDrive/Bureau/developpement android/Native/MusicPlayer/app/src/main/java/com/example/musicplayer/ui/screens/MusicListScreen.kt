@@ -38,7 +38,6 @@ fun MusicListScreen(
     onDeleteSong: (Song) -> Unit,
     onAddToQueue: (Song) -> Unit,
     onAddToPlaylist: (Song) -> Unit,
-    onShowQueue: () -> Unit,
     onShowPlaylists: () -> Unit,
     onDownloadClick: (Song) -> Unit
 ) {
@@ -65,7 +64,6 @@ fun MusicListScreen(
             HomeHeader(
                 nowPlayingSong = nowPlayingSong,
                 onSearchClick = onSearchClick,
-                onShowQueue = onShowQueue,
                 onShowPlaylists = onShowPlaylists
             )
             
@@ -88,7 +86,6 @@ fun MusicListScreen(
 private fun HomeHeader(
     nowPlayingSong: Song?,
     onSearchClick: () -> Unit,
-    onShowQueue: () -> Unit,
     onShowPlaylists: () -> Unit
 ) {
     Column(
@@ -125,19 +122,6 @@ private fun HomeHeader(
                     Icon(
                         imageVector = Icons.Default.PlaylistPlay,
                         contentDescription = "Playlists",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                IconButton(
-                    onClick = onShowQueue,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.List,
-                        contentDescription = "File d'attente",
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }

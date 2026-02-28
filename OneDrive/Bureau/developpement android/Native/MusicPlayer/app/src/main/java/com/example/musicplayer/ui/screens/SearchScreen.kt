@@ -7,6 +7,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.PlaylistAdd
+import androidx.compose.material.icons.filled.QueueMusic
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -28,6 +30,7 @@ import androidx.compose.ui.text.input.ImeAction
 fun SearchScreen(
     onPlayTrack: (DeezerTrack) -> Unit,
     onDownloadTrack: (DeezerTrack) -> Unit,
+    onAddToQueue: (DeezerTrack) -> Unit,
     onAddToPlaylist: (DeezerTrack) -> Unit,
     isDownloaded: (DeezerTrack) -> Boolean,
     onBackClick: () -> Unit
@@ -112,12 +115,13 @@ fun SearchScreen(
             } else {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                     items(searchResults) { track ->
-                TrackItem(
-                    track = track,
-                    isDownloaded = isDownloaded(track),
-                    onPlay = { onPlayTrack(track) },
+                        TrackItem(
+                            track = track,
+                            isDownloaded = isDownloaded(track),
+                            onPlay = { onPlayTrack(track) },
                             onDownload = { onDownloadTrack(track) },
-                            onAdd = { onAddToPlaylist(track) }
+                            onAddToQueue = { onAddToQueue(track) },
+                            onAddToPlaylist = { onAddToPlaylist(track) }
                         )
                     }
                 }
@@ -132,7 +136,8 @@ fun TrackItem(
     isDownloaded: Boolean,
     onPlay: () -> Unit,
     onDownload: () -> Unit,
-    onAdd: () -> Unit
+    onAddToQueue: () -> Unit,
+    onAddToPlaylist: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -152,7 +157,7 @@ fun TrackItem(
                 modifier = Modifier.size(60.dp),
                 error = androidx.compose.ui.res.painterResource(id = android.R.drawable.ic_menu_report_image)
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(track.title, style = MaterialTheme.typography.titleMedium, maxLines = 1)
                 Text(track.artist.name, style = MaterialTheme.typography.bodySmall, maxLines = 1)
@@ -162,8 +167,11 @@ fun TrackItem(
                     Icon(Icons.Default.Download, contentDescription = "Télécharger")
                 }
             }
-            IconButton(onClick = onAdd) {
-                Icon(Icons.Default.Add, contentDescription = "Ajouter à la file")
+            IconButton(onClick = onAddToQueue) {
+                Icon(Icons.Default.QueueMusic, contentDescription = "Ajouter à la file")
+            }
+            IconButton(onClick = onAddToPlaylist) {
+                Icon(Icons.Default.PlaylistAdd, contentDescription = "Ajouter à une playlist")
             }
         }
     }

@@ -70,9 +70,24 @@ class MainActivity : ComponentActivity() {
             val currentItem = controller.currentMediaItem ?: return
             val mediaId = currentItem.mediaId
             
-            val localSong = viewModel.songs.find { it.id.toString() == mediaId }
-            if (localSong != null) {
-                viewModel.nowPlayingSong.value = localSong
+            // On cherche d'abord dans les chansons locales
+            var foundSong = viewModel.songs.find { it.id.toString() == mediaId }
+            
+            // Si non trouvé, on cherche dans les playlists
+            if (foundSong == null) {
+                for (playlist in viewModel.playlists) {
+                    foundSong = playlist.songs.find { it.id.toString() == mediaId }
+                    if (foundSong != null) break
+                }
+            }
+            
+            // Si toujours non trouvé, on cherche dans la file d'attente
+            if (foundSong == null) {
+                foundSong = viewModel.queueItems.find { it.id.toString() == mediaId }
+            }
+
+            if (foundSong != null) {
+                viewModel.nowPlayingSong.value = foundSong
             } else {
                 viewModel.nowPlayingSong.value = Song(
                     id = mediaId.toLongOrNull() ?: mediaId.hashCode().toLong(),
@@ -94,18 +109,12 @@ class MainActivity : ComponentActivity() {
 
         override fun onMediaItemTransition(mediaItem: androidx.media3.common.MediaItem?, reason: Int) {
             // Quand une musique se termine ou on passe à la suivante
-            if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO || reason == Player.MEDIA_ITEM_TRANSITION_REASON_SEEK) {
-                mediaController?.let { controller ->
-                    // Si on a plus d'un élément et qu'on vient de transitionner,
-                    // on peut supprimer l'élément précédent de la file si ce n'est pas le dernier
-                    val currentIndex = controller.currentMediaItemIndex
-                    if (currentIndex > 0) {
-                        // Supprimer tous les éléments avant l'index actuel (ceux qui sont terminés)
-                        controller.removeMediaItems(0, currentIndex)
-                        updateQueueItems()
-                    }
-                }
-            }
+            updateQueueItems()
+        }
+
+        override fun onTimelineChanged(timeline: androidx.media3.common.Timeline, reason: Int) {
+            // Appelé quand la file d'attente change (ajout, suppression, déplacement)
+            updateQueueItems()
         }
     }
 
@@ -207,7 +216,16 @@ class MainActivity : ComponentActivity() {
             onShuffleToggle = { toggleShuffle() },
             onRepeatModeChange = { cycleRepeatMode() },
             onBackClick = { viewModel.showDetailScreen.value = false },
-            onDownloadClick = { s -> downloadSong(s) }
+            onDownloadClick = { s -> downloadSong(s) },
+            queueItems = viewModel.queueItems,
+            onRemoveFromQueue = { index ->
+                mediaController?.removeMediaItem(index)
+                updateQueueItems()
+            },
+            onPlayFromQueue = { index ->
+                mediaController?.seekToDefaultPosition(index)
+                mediaController?.play()
+            }
         )
     }
 
@@ -216,9 +234,9 @@ class MainActivity : ComponentActivity() {
         when (viewModel.currentScreen.value) {
             Screen.HOME -> HomeContent()
             Screen.SEARCH -> SearchContent()
-            Screen.QUEUE -> QueueContent()
             Screen.PLAYLISTS -> PlaylistsContent()
             Screen.PLAYLIST_DETAIL -> PlaylistDetailContent()
+            else -> HomeContent()
         }
     }
 
@@ -239,10 +257,6 @@ class MainActivity : ComponentActivity() {
                 viewModel.songToAddToPlaylist.value = song
                 viewModel.showPlaylistSelectionDialog.value = true
             },
-            onShowQueue = {
-                updateQueueItems()
-                viewModel.currentScreen.value = Screen.QUEUE
-            },
             onShowPlaylists = {
                 viewModel.currentScreen.value = Screen.PLAYLISTS
             },
@@ -255,7 +269,18 @@ class MainActivity : ComponentActivity() {
         SearchScreen(
             onPlayTrack = { track -> playRemoteTrack(track) },
             onDownloadTrack = { track -> viewModel.downloadTrack(track) },
-            onAddToPlaylist = { track -> addTrackToQueue(track) },
+            onAddToQueue = { track -> addTrackToQueue(track) },
+            onAddToPlaylist = { track ->
+                val song = Song(
+                    id = track.id,
+                    title = track.title,
+                    artist = track.artist.name,
+                    uri = Uri.parse(track.preview),
+                    albumArtUri = Uri.parse(track.album.coverMedium)
+                )
+                viewModel.songToAddToPlaylist.value = song
+                viewModel.showPlaylistSelectionDialog.value = true
+            },
             isDownloaded = { track ->
                 viewModel.songs.any { it.title == track.title && it.artist == track.artist.name } || 
                 viewModel.downloadingSongs.contains(track.id)
@@ -264,17 +289,6 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    @Composable
-    private fun QueueContent() {
-        QueueScreen(
-            queueItems = viewModel.queueItems,
-            onRemoveItem = { index ->
-                mediaController?.removeMediaItem(index)
-                updateQueueItems()
-            },
-            onBackClick = { viewModel.currentScreen.value = Screen.HOME }
-        )
-    }
 
     @Composable
     private fun PlaylistsContent() {
@@ -346,11 +360,13 @@ class MainActivity : ComponentActivity() {
             controller.repeatMode = savedRepeat
             controller.prepare()
             controller.play()
+            updateQueueItems()
         }
     }
 
     private fun addLocalSongToQueue(song: Song) {
         mediaController?.addMediaItem(song.toMediaItem())
+        updateQueueItems()
         Toast.makeText(this, "Ajouté à la file d'attente", Toast.LENGTH_SHORT).show()
     }
 
@@ -363,6 +379,7 @@ class MainActivity : ComponentActivity() {
             controller.repeatMode = savedRepeat
             controller.prepare()
             controller.play()
+            updateQueueItems()
         }
     }
 
@@ -378,6 +395,7 @@ class MainActivity : ComponentActivity() {
         mediaController?.setMediaItem(song.toMediaItem())
         mediaController?.prepare()
         mediaController?.play()
+        updateQueueItems()
     }
 
     private fun addTrackToQueue(track: DeezerTrack) {
@@ -389,6 +407,7 @@ class MainActivity : ComponentActivity() {
             albumArtUri = Uri.parse(track.album.coverMedium)
         )
         mediaController?.addMediaItem(song.toMediaItem())
+        updateQueueItems()
         Toast.makeText(this, "Ajouté à la file d'attente", Toast.LENGTH_SHORT).show()
     }
 
@@ -479,14 +498,35 @@ class MainActivity : ComponentActivity() {
             val currentItem = controller.currentMediaItem
             if (currentItem != null) {
                 val mediaId = currentItem.mediaId
-                viewModel.nowPlayingSong.value = viewModel.songs.find { it.id.toString() == mediaId }
-                    ?: Song(
+                
+                // On cherche d'abord dans les chansons locales
+                var foundSong = viewModel.songs.find { it.id.toString() == mediaId }
+                
+                // Si non trouvé, on cherche dans les playlists (pour les titres API)
+                if (foundSong == null) {
+                    for (playlist in viewModel.playlists) {
+                        foundSong = playlist.songs.find { it.id.toString() == mediaId }
+                        if (foundSong != null) break
+                    }
+                }
+                
+                // Si toujours non trouvé, on cherche dans la file d'attente actuelle du ViewModel
+                if (foundSong == null) {
+                    foundSong = viewModel.queueItems.find { it.id.toString() == mediaId }
+                }
+
+                if (foundSong != null) {
+                    viewModel.nowPlayingSong.value = foundSong
+                } else {
+                    // Fallback si vraiment introuvable
+                    viewModel.nowPlayingSong.value = Song(
                         id = mediaId.toLongOrNull() ?: 0L,
-                        title = currentItem.mediaMetadata.title?.toString() ?: "",
-                        artist = currentItem.mediaMetadata.artist?.toString() ?: "",
+                        title = currentItem.mediaMetadata.title?.toString() ?: "Inconnu",
+                        artist = currentItem.mediaMetadata.artist?.toString() ?: "Artiste inconnu",
                         uri = currentItem.localConfiguration?.uri ?: Uri.EMPTY,
                         albumArtUri = currentItem.mediaMetadata.artworkUri
                     )
+                }
             }
         }
     }
